@@ -1,0 +1,44 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hook-session-start.ps1\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hook-inject-rule.ps1\" -Files \"read-before-work,no-credentials-in-docs\" -AsAdditionalContext -OncePerSession"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hook-inject-rule.ps1\" -Files \"approval-before-commit\" -OnlyIfInputMatches \"git commit|git push|tf checkin\" -AsPermissionAsk"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Claude 가 답을 끝내려 한다. 증거 없는 완료 보고를 막는다.\n\n입력의 stop_hook_active 가 true 면 판단하지 말고 {\"ok\": true} 로 답한다 — 이미 한 번 막았다.\n\n마지막 답변에 아래 주장이 있는데 그 증거가 같은 답변 안에 없으면 {\"ok\": false, \"reason\": \"...\"} 로 답한다.\n  고쳤다             원래 증상을 재현해 안 나는 것\n  테스트했다          실제로 돌린 출력\n  단계를 끝냈다       그 산출물 파일이 있고 절이 비어 있지 않은 것\n  서브에이전트가 했다  내가 직접 본 변경 내용\n\n증거는 이번 답변에서 새로 본 것이어야 한다. 직전 답변의 출력은 그 사이에 바뀌었을 수 있다.\n못 댄 것을 「못 댔다」고 밝혔으면 통과다 — 빈칸으로 두거나 「됐을 것이다」로 넘어간 것만 막는다.\nreason 에는 어느 주장에 무슨 증거가 빠졌는지 적고, 전문은 hooks/rules/evidence-before-done.md 에 있다고 가리킨다.\n완료 주장이 없으면 {\"ok\": true}."
+          }
+        ]
+      }
+    ]
+  }
+}

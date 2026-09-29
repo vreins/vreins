@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "_": [
+    "이 저장소가 마켓플레이스라는 선언. 이것이 없으면 plugin install 이 이 폴더를 못 찾는다.",
+    "버전은 여기 적지 않는다 — harness\\.claude-plugin\\plugin.json 이 정본이다.",
+    "두 곳에 적으면 한쪽이 낡는다. 실제로 낡아서 1.0.0 인 채로 5개월을 있었다."
+  ],
+  "name": "vreins",
+  "description": "vReins 하네스 — 작업 요청(SR·SM 등)을 단계대로 진행시키고 산출물을 양식대로 남기게 하는 Claude Code 하네스.",
+  "owner": { "name": "vReins" },
+  "plugins": [
+    {
+      "name": "vreins-harness",
+      "source": "./harness",
+      "description": "작업 요청(SR·SM 등)의 절차·양식·행동 규칙.",
+      "keywords": ["vreins", "harness", "workflow", "sr", "legacy"],
+      "homepage": "https://github.com/vreins/vreins"
+    }
+  ]
+}

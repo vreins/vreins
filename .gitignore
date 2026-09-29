@@ -1,0 +1,26 @@
+# 조직 고유 정보는 이 저장소에 두지 않는다.
+#
+# 이 플러그인은 절차 · 양식 · 행동 규칙이라는 범용 뼈대만 담는다.
+# 시스템 목록 · 소스 경로 · 기술 스택 지침 · DB 계정은 받는 쪽이 각자 갖는다.
+# 어디서 찾는지는 README 와 vreins-rules 3절에 있다.
+#
+# 아래 셋은 실수로 커밋되는 것을 막기 위한 그물이다. 원래 여기 있을 것이 아니다.
+harness/systems/
+harness/techbase/
+harness/skills/vreins-system/references/systems.md
+
+# 자격증명. 어떤 경로에 있든 커밋하지 않는다
+*.local.json
+/config/
+/systems/
+
+# 설치 흔적. claude plugin install --scope project 가 남긴다
+.claude/settings.json
+.claude/settings.local.json
+
+# 산출물은 이 저장소가 아니다
+/wiki/
+
+# 윈도우가 만드는 것
+desktop.ini
+Thumbs.db

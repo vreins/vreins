@@ -1,0 +1,21 @@
+{
+  "name": "vreins-harness",
+  "displayName": "vReins 하네스",
+  "version": "4.1.0",
+  "description": "작업 요청(SR·SM 등)의 절차·양식·행동 규칙. 산출물을 wiki 에 양식대로 쌓는다.",
+  "author": { "name": "vReins" },
+  "keywords": ["vreins", "harness", "mes", "level2", "sr", "workflow"],
+
+  "_설정": [
+    "userConfig 를 두지 않는다. 설정은 런처(vReins.exe)가 환경변수로 넣는다.",
+    "  VREINS_SYSTEM_TYPE · VREINS_SYSTEM_CODE · VREINS_SYSTEM_BASE · VREINS_SCM",
+    "  VREINS_ROOT · VREINS_WIKI_ROOT · VREINS_TECHBASE_ROOT · VREINS_REGISTRY · VREINS_TF_PATH",
+    "같은 값을 두 군데서 물으면 어느 쪽이 맞는지 알 수 없게 된다.",
+    "",
+    "2026-09-22 — 시스템 정보는 이 플러그인에 넣지 않는다. 깃허브 공개 배포본이다.",
+    "  systems\\{유형}\\{코드}.json    C:\\vReins\\systems\\   경로. 커밋 경로에 없다",
+    "  techbase\\{기술기반}\\          C:\\vReins\\techbase\\  기술기반 지침. 위키로 옮기는 중",
+    "  config\\{유형}\\{코드}.json     C:\\vReins\\config\\    DB 계정. 사람이 적는 유일한 곳",
+    "찾는 순서는 hooks\\scripts\\lib\\hook-common.ps1 의 Get-Vreins*Root 가 정한다."
+  ]
+}

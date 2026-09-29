@@ -1,16 +1,157 @@
-## Hi there 👋
+# vReins
 
-<!--
-**vreins/vreins** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+작업 요청(SR · SM 등)을 **단계대로** 진행시키고, 각 단계의 산출물을 정해진
+양식으로 남기게 하는 Claude Code 하네스.
 
-Here are some ideas to get you started:
+레거시 업무 시스템을 여러 개 맡아 고치는 팀을 위해 만들었다. 노리는 것은 둘이다.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+    모르는 것을 지어내지 못하게 한다      경로 · 용어 · 테이블 의미 · 업무 규칙
+    끝났다는 말에 증거를 붙이게 한다      돌린 명령과 그 출력이 없으면 완료가 아니다
+
+## 무엇이 들어 있고, 무엇이 안 들어 있나
+
+**이 저장소에는 조직 고유의 정보가 없다.** 절차 · 양식 · 행동 규칙이라는
+범용 뼈대만 담는다. 「우리 시스템은 어떤 스택을 쓰고 소스가 어디 있나」는
+받는 쪽이 각자 채운다.
+
+| | 어디에 |
+|---|---|
+| 절차 · 양식 · 행동 규칙 | **이 플러그인** |
+| 시스템 목록 · 소스 경로 | 받는 쪽의 레지스트리 · 시스템 정의 |
+| 기술 스택 지침 | 받는 쪽의 기술기반 폴더 |
+| DB 계정 | 받는 쪽 로컬. 어디에도 커밋되지 않는다 |
+
+그래서 **아무것도 채우지 않은 채로 설치하면 하네스는 「모른다」고 말하고 멈춘다.**
+그것이 정상 동작이다 — 경로를 지어내는 것보다 멈추는 쪽이 낫다.
+
+## 전제
+
+    Claude Code                  플러그인 마켓플레이스를 쓸 수 있어야 한다
+    Windows PowerShell 5.1       훅이 전부 .ps1 이다. 현재 Windows 전용이다
+    Python 3                     선택. 위키 목차 생성기(build-index.py)를 쓸 때만
+
+문서와 프롬프트는 **한국어**로 쓰여 있다.
+
+## 설치
+
+    claude plugin marketplace add vreins/vreins
+    claude plugin install vreins-harness@vreins
+
+프로젝트 스코프로만 켜고 싶으면 `--scope project` 를 붙인다.
+
+## 설치 다음에 채우는 것
+
+하네스는 세 자리를 **찾는다.** 알고 있는 것이 아니라 찾는 것이고,
+못 찾으면 못 찾았다고 보고하고 멈춘다.
+
+### 1. 위키 — 산출물이 쌓일 곳
+
+나머지가 전부 여기서 갈린다. 다음 순서로 찾는다.
+
+    VREINS_WIKI_ROOT             환경변수
+    {루트}\wiki-location.txt     사람이 한 줄 적는 자리
+    {루트}\wiki\                 기본 자리
+
+`{루트}` 는 `VREINS_ROOT`, 없으면 `C:\vReins` 다.
+
+`wiki-location.txt` 는 이렇게 생겼다.
+
+    # 이 아래 한 줄에 내 위키 폴더 경로를 적는다.
+    {여기에 위키 폴더 경로를 적으세요}
+
+**중괄호를 지우고 실제 경로로 바꾼다.** `{…}` · `(…)` · `<…>` 로 감싼 줄은
+「아직 안 적음」으로 본다 — 받자마자 그대로 둔 것이 경로로 읽히는 일을 막는다.
+
+**플러그인 폴더 안에 적지 않는다.** 거기는 갱신 때 통째로 덮인다.
+
+### 2. 레지스트리 — 시스템 목록
+
+    VREINS_REGISTRY                환경변수
+    {위키}\systems.md              기본
+    {루트}\systems\systems.md
+
+시스템 한 줄에 시스템코드 · 시스템명 · `systemBase`(어느 기술기반을 쓰나)가 있는
+마크다운 표다. 세션 시작 훅이 **지금 다루는 시스템의 행만** 읽는다.
+
+### 3. 기술기반 — 시스템이 따라야 할 스택 지침
+
+    VREINS_TECHBASE_ROOT           환경변수
+    {위키}\techbase\               기본
+    {루트}\techbase\
+
+`{기술기반 루트}\{systemBase}\` 에 네 개를 둔다.
+
+    guideline-TechStack.md      언어 · 프레임워크 · DB
+    guideline-Architecture.md   구조
+    guideline-Boilerplate.md    복사 단위
+    guideline-Linter.md         반드시 확인할 것
+
+**이 폴더가 없거나 비어 있으면 하네스는 그렇다고 보고한다.**
+다른 기술기반 지침을 대신 가져다 쓰지 않는다.
+
+### 4. 시스템 정의 (선택)
+
+시스템별 소스 경로를 알려 주면 세션 시작 훅이 「지금 이 폴더가 어느 시스템인가」를
+**폴더 이름으로 맞히지 않고 정의와 대조해** 판정한다.
+
+    {루트}\systems\{시스템유형}\{시스템코드}.json
+
+구조와 규칙은 `vreins-system` 스킬에 있다. 요약하면 이렇다.
+
+    시스템유형 · 시스템코드를 파일 안에 적지 않는다   파일이 놓인 자리가 그것이다
+    db 에 계정과 비밀번호를 적지 않는다              커밋되는 파일이다
+    IP 를 적지 않는다                               〃
+
+## 무엇을 하나
+
+사람이 치는 **커맨드 여덟**과, AI 가 상황에 맞춰 부르는 **스킬 일곱**으로 나뉘어 있다.
+
+    /vreins-requirements    01  무엇을 해달라는 것인가 — 코드를 보지 않는다
+    /vreins-analysis        02  우리 코드에서 무슨 뜻인가 · 영향범위를 정한다
+    /vreins-design          03  무엇을 어떻게 바꿀 것인가
+    /vreins-development     04  고친다
+    /vreins-testing         05  확인한다
+    /vreins-deployment      06  올린다 · 체인지셋을 남긴다
+    /vreins-troubleshoot    TS  장애. 한 장으로 끝낸다
+    /vreins-review              체크인 · PR 전에 훑는다
+
+각 단계는 앞 단계 산출물이 **승인된 뒤에** 시작하고, 산출물은 위키에 양식대로 쌓인다.
+
+단계마다 읽는 지침이 다르다. 예를 들어 Requirements 는 기술기반을 **한 줄도 안 읽는다** —
+요구가 정해지기 전에 구현을 생각하게 되기 때문이다. 표는 `vreins-rules` 4절에 있다.
+
+## 훅이 무엇을 거나
+
+문구의 세기가 아니라 **훅**으로 건다. 어느 이벤트의 출력이 실제로 모델에 닿는지는
+`harness/hooks/README.md` 에 실측과 함께 적혀 있다.
+
+| 규칙 | 언제 | 어떻게 |
+|---|---|---|
+| `handling-unknowns` | 세션 시작 | 항상 주입 |
+| `read-before-work` · `no-credentials-in-docs` | 편집 직전 | 모델에만 조용히 · 세션당 한 번 |
+| `approval-before-commit` | 커밋 · 체크인 직전 | 사용자에게 승인을 묻는다 |
+| `evidence-before-done` | 답을 끝내려 할 때 | 증거 없는 완료 보고를 되돌린다 |
+
+## 설계에서 고른 것
+
+**`<EXTREMELY_IMPORTANT>` 식 강조 주입을 쓰지 않는다.** 2026-09-21 실측에서
+상류(superpowers)는 세션 시작에 6,106자를 주입하며 「1%라도 적용될 것 같으면 반드시
+호출하라」고 못 박았는데 실제로 불린 스킬은 14개 중 1개였다. 강제력은 문구가 아니라
+기계적 장치에서 나온다고 보고, 훅의 조건부 주입과 권한 설정 쪽을 택했다.
+
+**같은 값을 두 군데서 묻지 않는다.** `userConfig` 를 두지 않고 환경변수 하나로 받는다.
+버전도 `plugin.json` 한 곳에만 적는다 — 두 군데 적으면 한쪽이 낡는다.
+
+**빈칸을 추측으로 채우지 않는다.** 비어 있으면 「모른다」가 그대로 보이지만,
+추측을 채우면 「있는데 틀린 것」이 되고 다음 사람은 그것을 확인된 값으로 읽는다.
+
+## 출처
+
+obra/superpowers 의 뼈대를 가져와 가지치기하고 그 위에 도메인을 얹었다.
+무엇을 가져오고 무엇을 버렸는지는 [harness/ATTRIBUTION.md](harness/ATTRIBUTION.md) 에 있다.
+
+## 라이선스
+
+MIT. [LICENSE](LICENSE) 를 본다.
+
+상류 저작물의 MIT 고지는 [harness/LICENSE](harness/LICENSE) 에 그대로 둔다.
