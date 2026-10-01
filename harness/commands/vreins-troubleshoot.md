@@ -17,7 +17,7 @@ $ARGUMENTS
 장애는 `TS-troubleshooting-{제목}.md` **한 장**으로 끝낸다.
 요구사항·설계 문서를 만들지 않는다.
 
-읽는 지침은 `guideline-TechStack.md` · `guideline-Architecture.md` 다 (4절 표).
+읽는 지침은 `{기술기반}-TechStack.md` · `{기술기반}-Architecture.md` 다 (4절 표).
 
 ## 고치기 전에 원인을 찾는다
 

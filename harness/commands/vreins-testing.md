@@ -9,7 +9,7 @@ argument-hint: [작업 제목. 비우면 진행 중인 세션을 찾는다]
 
 `04-development-{제목}.md` 가 **없으면 멈춘다.**
 
-읽는 지침은 `guideline-TechStack.md` · `guideline-Linter.md` 다 (4절 표).
+읽는 지침은 `{기술기반}-TechStack.md` · `{기술기반}-Linter.md` 다 (4절 표).
 
 ## 이 단계의 핵심
 

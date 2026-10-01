@@ -184,43 +184,50 @@ def check_overview(p, rel, want, vc):
                     % (rel, format(len(t), ",")))
 
 
-def registry(wiki):
-    """시스템 정의({루트}\\systems\\ · 플러그인\\systems\\)와 위키 시스템이 같은 집합인가.
+def definitions(wiki):
+    """이 PC 의 시스템 정의({루트}\\systems\\{유형}\\{코드}.json)와 위키 시스템을 대조한다.
 
-    한쪽만 있으면 조용히 어긋난다 — 레지스트리에만 있으면 런처가 빈 시스템을 띄우고,
-    위키에만 있으면 그 시스템으로는 세션을 못 연다. 실측으로 9개 중 2개만 등록돼
-    있었고 ABCF 는 지워진 시스템을 가리키고 있었다."""
+    둘은 답하는 질문이 다르다 — 정의는 「이 PC 에서 진입할 수 있는 것」, 위키는 「팀이 아는 것」.
+    그래서 비대칭으로 본다.
+      정의만 있다   오류.  산출물이 갈 자리가 없다 — 위키에 폴더를 만든다 (_sample 을 베낀다)
+      위키만 있다   정보.  내가 안 맡은 시스템일 뿐이다. 맡았으면 런처 [시스템 설정] 에서 등록한다
+
+    플러그인\\systems\\ 는 더 보지 않는다 — 2026-09-22 회의로 시스템 정보는 플러그인에
+    넣지 않기로 했고, 그 층은 언제나 비어 있었다."""
     root = os.environ.get("VREINS_ROOT") or r"C:\vReins"
-    dirs = [os.path.join(root, "systems"), os.path.join(HARNESS, "systems")]
-    dirs = [x for x in dirs if os.path.isdir(x)]
-    if not dirs:
+    sysdir = os.path.join(root, "systems")
+    if not os.path.isdir(sysdir):
+        warn.append("시스템 정의 폴더가 없다 — %s. 이 PC 에서는 어느 시스템으로도 세션을 못 연다" % sysdir)
         return
     reg = set()
-    for sysdir in dirs:
-        for t in sorted(os.listdir(sysdir)):
-            d = os.path.join(sysdir, t)
-            if not os.path.isdir(d):
-                continue
-            for f in sorted(os.listdir(d)):
-                if f.endswith(".json") and not f.endswith(".local.json"):
-                    reg.add((t, f[:-5]))
+    for t in sorted(os.listdir(sysdir)):
+        d = os.path.join(sysdir, t)
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if f.endswith(".json") and not f.endswith(".local.json"):
+                reg.add((t, f[:-5]))
     wk = set()
-    for t in ("MES", "LEVEL2", "WEB", "APP"):
+    for t in sorted(os.listdir(wiki)):
         p = os.path.join(wiki, t)
-        if not os.path.isdir(p):
+        if not os.path.isdir(p) or t.startswith((".", "_")):
             continue
         for c in sorted(os.listdir(p)):
-            if os.path.isfile(os.path.join(p, c, c + "-OVERVIEW.md")):
+            if c != "COMMON" and os.path.isfile(os.path.join(p, c, c + "-OVERVIEW.md")):
                 wk.add((t, c))
     for t, c in sorted(reg - wk):
-        err.append("시스템 정의 systems/%s/%s.json 이 있는데 위키에 %s/%s 가 없다" % (t, c, t, c))
-    for t, c in sorted(wk - reg):
-        warn.append("위키에 %s/%s 가 있는데 시스템 정의가 없다 — 그 시스템으로는 세션을 못 연다" % (t, c))
+        err.append("시스템 정의 systems/%s/%s.json 이 있는데 위키에 %s/%s/%s-OVERVIEW.md 가 없다 — "
+                   "산출물이 갈 자리가 없다. _sample/ 을 베껴 만든다" % (t, c, t, c, c))
+    missing = sorted(wk - reg)
+    if missing:
+        warn.append("이 PC 에 시스템 정의가 없는 위키 시스템 %d개 — %s. 안 맡은 것이면 정상이고, "
+                    "맡은 것이면 런처 [시스템 설정] 에서 등록한다"
+                    % (len(missing), " · ".join("%s/%s" % x for x in missing)))
 
 
 def main(wiki):
     want = template_sections()
-    registry(wiki)
+    definitions(wiki)
     vc = vocab(wiki)
     n = 0
     for root, d, fs in os.walk(wiki):

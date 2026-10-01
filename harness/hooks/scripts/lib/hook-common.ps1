@@ -112,10 +112,13 @@ function Get-VreinsWikiRoot {
   각자의 위키가 갖는다. 그래서 여기를 **찾는** 것이지 **아는** 것이 아니다.
 
     VREINS_TECHBASE_ROOT              런처·시험용. 있으면 무조건 이긴다
-    {위키}\{유형}\COMMON\techbase\   정본. 파일이 {기술기반}-{이름}.md 로 납작하게 있다
-    {위키}\techbase\                  위키 이관 전 자리
-    {루트}\techbase\         위키를 따로 두지 않는 사람
-    플러그인\techbase\        이관 전 옛 자리. 곧 없어진다
+    {위키}\{유형}\COMMON\_manual\    정본. 지침과 받은 문서가 한 폴더에 있고 머리말 `강도` 로 가른다
+    {루트}\techbase\                  위키를 따로 두지 않는 사람
+
+  2026-09-28 위키가 `COMMON\techbase\` 를 `COMMON\_manual\` 로 합쳤다 — 「누가 썼나」로
+  폴더를 가르지 않고 「꼭 읽나」로 가른다. 지침은 파일 이름이 `{기술기반}-{이름}.md` 라
+  같은 폴더에 받은 문서가 섞여 있어도 가려진다. 옛 자리 `COMMON\techbase\` 는 더 보지 않는다 —
+  한 번 옮긴 자리를 계속 보면 둘 다 있을 때 어느 쪽을 읽었는지 모른다.
 
   **못 찾으면 $null 이다.** 다른 폴더를 가져다 쓰지 않는다 — 없다는 사실이
   그대로 보여야 한다(handling-unknowns).
@@ -124,13 +127,9 @@ function Get-VreinsTechbaseRoot {
   param([string] $SystemType)
   if ($env:VREINS_TECHBASE_ROOT -and (Test-Path $env:VREINS_TECHBASE_ROOT)) { return $env:VREINS_TECHBASE_ROOT }
   $wiki = Get-VreinsWikiRoot
-  if ($wiki) {
+  if ($wiki -and $SystemType) {
     # 유형마다 따로 있다 — 시스템을 모르면 이 자리는 정할 수 없다
-    if ($SystemType) {
-      $t = Join-Path (Join-Path (Join-Path $wiki $SystemType) 'COMMON') 'techbase'
-      if (Test-Path $t) { return $t }
-    }
-    $t = Join-Path $wiki 'techbase'
+    $t = Join-Path (Join-Path (Join-Path $wiki $SystemType) 'COMMON') '_manual'
     if (Test-Path $t) { return $t }
   }
   $root = Get-VreinsRoot
@@ -138,63 +137,32 @@ function Get-VreinsTechbaseRoot {
     $t = Join-Path $root 'techbase'
     if (Test-Path $t) { return $t }
   }
-  $t = Join-Path (Get-VreinsHarnessRoot) 'techbase'
-  if (Test-Path $t) { return $t }
   return $null
 }
 
 <#
-  시스템 레지스트리(systems.md)가 있는 곳. techbase 와 같은 이유로 찾는다.
+  시스템 정의를 전부 읽는다. **한 층이다.**
 
-    VREINS_REGISTRY                                    있으면 이긴다
-    {위키}\systems.md                                   정본
-    {루트}\systems\systems.md
-    플러그인\skills\vreins-system\references\systems.md  이관 전 옛 자리
+    {루트}\systems\{유형}\{코드}.json      내 PC 에 등록된 것
 
-  못 찾으면 $null. 부르는 쪽이 「레지스트리가 없다」를 그대로 낸다.
-#>
-function Get-VreinsRegistryPath {
-  if ($env:VREINS_REGISTRY -and (Test-Path $env:VREINS_REGISTRY)) { return $env:VREINS_REGISTRY }
-  $wiki = Get-VreinsWikiRoot
-  if ($wiki) {
-    $p = Join-Path $wiki 'systems.md'
-    if (Test-Path $p) { return $p }
-  }
-  $root = Get-VreinsRoot
-  if ($root) {
-    $p = Join-Path $root 'systems\systems.md'
-    if (Test-Path $p) { return $p }
-  }
-  $p = Join-Path (Get-VreinsHarnessRoot) 'skills\vreins-system\references\systems.md'
-  if (Test-Path $p) { return $p }
-  return $null
-}
-
-<#
-  시스템 정의를 전부 읽는다. 두 층이고 **같은 코드면 루트 쪽이 이긴다.**
-
-    {루트}\systems\{유형}\{코드}.json      내가 등록한 것
-    플러그인\systems\{유형}\{코드}.json     팀 공통. 읽기 전용
+  한때 플러그인\systems\ 를 「팀 공통」 층으로 같이 봤다. 2026-09-22 회의로 시스템 정보는
+  플러그인에 넣지 않기로 했으므로 그 층은 언제나 비어 있었다 — 비어 있는 층을 계속 보면
+  문서가 「두 층」이라고 거짓말을 한다. 레지스트리(systems.md)도 같은 날 없앴다 —
+  시스템명·기술기반·형상관리는 이 파일이, 설명·소유자·관계는 그 시스템 문서 머리말이 갖는다.
+  같은 것을 세 벌 적으면 둘은 반드시 낡는다.
 #>
 function Get-VreinsSystemFiles {
   $out = New-Object System.Collections.ArrayList
-  $seen = @{}
-  $dirs = @()
   $root = Get-VreinsRoot
-  if ($root) { $dirs += (Join-Path $root 'systems') }          # 로컬이 먼저다 = 이긴다
-  $dirs += (Join-Path (Get-VreinsHarnessRoot) 'systems')
-  foreach ($d in $dirs) {
-    if (-not (Test-Path $d)) { continue }
-    foreach ($f in (Get-ChildItem $d -Recurse -Filter *.json -File -ErrorAction SilentlyContinue)) {
-      if ($f.Name -like '*.local.json') { continue }            # 옛 계정 파일. 시스템이 아니다
-      $type = $f.Directory.Name
-      $code = [System.IO.Path]::GetFileNameWithoutExtension($f.Name)
-      $key  = $type + '/' + $code
-      if ($seen.ContainsKey($key)) { continue }                 # 먼저 본 쪽(로컬)이 이긴다
-      $seen[$key] = $true
-      try { $j = Get-Content $f.FullName -Raw -Encoding utf8 | ConvertFrom-Json } catch { continue }
-      [void]$out.Add([pscustomobject]@{ Type = $type; Code = $code; Json = $j; Path = $f.FullName })
-    }
+  if (-not $root) { return $out }
+  $d = Join-Path $root 'systems'
+  if (-not (Test-Path $d)) { return $out }
+  foreach ($f in (Get-ChildItem $d -Recurse -Filter *.json -File -ErrorAction SilentlyContinue)) {
+    if ($f.Name -like '*.local.json') { continue }            # 옛 계정 파일. 시스템이 아니다
+    $type = $f.Directory.Name
+    $code = [System.IO.Path]::GetFileNameWithoutExtension($f.Name)
+    try { $j = Get-Content $f.FullName -Raw -Encoding utf8 | ConvertFrom-Json } catch { continue }
+    [void]$out.Add([pscustomobject]@{ Type = $type; Code = $code; Json = $j; Path = $f.FullName })
   }
   return $out
 }
@@ -222,6 +190,11 @@ function Get-VreinsSystemFiles {
 #>
 function Get-VreinsSystem {
   if ($env:VREINS_SYSTEM_CODE) {
+    # 런처가 준 값이 정답이다. 정의 파일은 경로를 알려 주려고 **찾아만** 둔다 — 없어도 확정은 된다.
+    $def = $null
+    foreach ($f in (Get-VreinsSystemFiles)) {
+      if ($f.Type -eq $env:VREINS_SYSTEM_TYPE -and $f.Code -eq $env:VREINS_SYSTEM_CODE) { $def = $f; break }
+    }
     return [pscustomobject]@{
       SystemType = $env:VREINS_SYSTEM_TYPE
       SystemCode = $env:VREINS_SYSTEM_CODE
@@ -230,6 +203,7 @@ function Get-VreinsSystem {
       Source     = 'launcher'
       MatchedAt  = $null
       MatchedKey = $null
+      Definition = $def
     }
   }
 
@@ -257,6 +231,7 @@ function Get-VreinsSystem {
           Source     = 'cwd'
           MatchedAt  = $p
           MatchedKey = $prop.Name
+          Definition = $f
         }
       }
     }
@@ -335,73 +310,55 @@ function Get-VreinsTableFirstCells {
 }
 
 <#
-  레지스트리에서 **이 세션의 시스템 행만** 뽑는다.
+  이 세션의 **시스템 정의**를 짧게 낸다 — 시스템명 · 기술기반 · 형상관리 · 소스 경로.
 
-  전문을 싣지 않는 이유 — 세션이 쓰는 것은 자기 행 하나뿐인데 표는 계속 는다.
-  게다가 2절(모듈 코드 조회표)은 그 문서 스스로 「등록 절차에서만 로딩한다」고
-  적어 두고도 실려 왔다. 선언과 실제를 맞추는 일이기도 하다.
+  한때 여기서 레지스트리(systems.md)의 「이 시스템 행」을 뽑았다. 그 행이 주던 것은
+  전부 시스템 정의 JSON 에 이미 있었고, 레지스트리 파일은 끝내 어디에도 만들어지지 않아
+  세션마다 「못 찾았다」만 찍혔다. 그래서 정의 파일을 직접 낸다.
 
-  못 찾으면 **그 사실을 낸다.** 조용히 비우면 「레지스트리에 있다」로 읽힌다.
+  **경로를 내는 것이 핵심이다.** 런처로 들어오면 환경변수에는 유형·코드·기술기반만 있고
+  소스가 어디 있는지는 없다. 그러면 모델이 경로를 추측하게 된다 — 그 자리를 막는다.
+
+  `db` 는 값을 싣지 않는다. 호스트가 들어 있고, 세션 로그에 남길 이유가 없다.
+  있다는 사실만 낸다. 계정은 애초에 이 파일에 없다 — {루트}\config\ 에만 있다.
+
+  확정된 시스템을 인자로 받는다. **환경변수를 직접 보지 않는다** — 시스템을 정하는
+  자리는 Get-VreinsSystem 하나뿐이어야 한다. 시스템이 없으면 $null — 그 사실은
+  세션 시작 훅 1절이 이미 말했다. 정의 파일만 없으면 그 사실을 낸다.
 #>
-function Get-VreinsRegistryRowBlock {
-  <#
-    확정된 시스템을 인자로 받는다. **환경변수를 직접 보지 않는다** —
-    런처 없이 들어오면 환경변수는 비어 있고 시스템은 폴더로 확정되는데,
-    여기서 환경변수만 보면 「확정되지 않았다」고 거짓말을 한다.
-    시스템을 정하는 자리는 Get-VreinsSystem 하나뿐이어야 한다.
-  #>
+function Get-VreinsSystemDefinitionBlock {
   param($System)
 
-  $nl   = [Environment]::NewLine
-  $path = Get-VreinsRegistryPath
+  if (-not $System -or -not $System.SystemCode) { return $null }
+  $nl = [Environment]::NewLine
+  $label = 'systems\' + $System.SystemType + '\' + $System.SystemCode + '.json'
 
-  <#
-    못 찾으면 **조용히 넘어가지 않는다.** 옛날에는 플러그인 한 곳만 보고
-    없으면 $null 이었는데, 레지스트리가 플러그인 밖으로 나간 뒤로는
-    「없다」가 곧 「아직 연결을 안 했다」를 뜻한다. 비워 두면 그 사실이 안 보인다.
-  #>
-  if (-not $path) {
-    return ("===== 시스템 레지스트리 =====" + $nl +
-            "레지스트리를 못 찾았다. 아래 넷 중 한 곳에 systems.md 가 있어야 한다." + $nl + $nl +
-            "    VREINS_REGISTRY 환경변수" + $nl +
-            "    {위키}\systems.md" + $nl +
-            "    {루트}\systems\systems.md" + $nl +
-            "    플러그인\skills\vreins-system\references\systems.md   (옛 자리)" + $nl + $nl +
-            "시스템코드·기술기반을 추측하지 않는다. 사용자에게 위치를 묻는다." + $nl)
+  $def = $System.Definition
+  if (-not $def) {
+    return ('===== ' + $label + ' — 시스템 정의 =====' + $nl +
+            '이 PC 에 정의 파일이 없다. 런처가 준 유형·코드·기술기반만 안다 — **소스 경로는 모른다.**' + $nl +
+            '경로를 추측하지 않는다. 사용자에게 묻거나, 런처 [시스템 설정] 에서 등록하게 한다.' + $nl)
   }
 
-  $label = $path
-  $text  = Get-Content $path -Raw -Encoding utf8
-  if ($text -match (Get-VreinsUnwrittenPattern)) { return $null }
-
-  $head = "===== " + $label + "  (이 시스템 행만. 전문은 필요할 때 읽는다) =====" + $nl
-
-  $type = if ($System) { $System.SystemType } else { $null }
-  $code = if ($System) { $System.SystemCode } else { $null }
-  if (-not $code) {
-    return ($head + '시스템이 확정되지 않아 행을 고르지 못했다. 전문은 위 경로에 있다.' + $nl)
-  }
-
-  # 1절 표만 본다. 2절(모듈 코드 조회표)은 등록 절차에서만 읽는다
-  $lines = $text -split "`r?`n"
-  $stop  = $lines.Count - 1
-  for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^##\s+2\.') { $stop = $i - 1; break } }
-
-  $header = $null; $sep = $null; $hit = $null
-  for ($i = 0; $i -le $stop; $i++) {
-    $l = $lines[$i]
-    if ($l -notmatch '^\s*\|') { continue }
-    if ((-not $header) -and $i + 1 -le $stop -and $lines[$i + 1] -match '^\s*\|[\s:\-|]+\|\s*$') {
-      $header = $l; $sep = $lines[$i + 1]; continue
+  $j  = $def.Json
+  $sb = New-Object System.Text.StringBuilder
+  [void]$sb.Append('===== ' + $label + ' — 시스템 정의 =====').Append($nl)
+  if ($j.'시스템명') { [void]$sb.Append('시스템명     ' + $j.'시스템명').Append($nl) }
+  $base = @(@($j.systemBase) | Where-Object { $_ })
+  [void]$sb.Append('기술기반     ' + $(if ($base.Count -gt 0) { $base -join ', ' } else { '(없음 — 읽을 지침이 없다는 뜻이고 그게 맞는 값이다)' })).Append($nl)
+  if ($j.'형상관리') { [void]$sb.Append('형상관리     ' + $j.'형상관리').Append($nl) }
+  $paths = $j.'경로'
+  if ($paths) {
+    [void]$sb.Append('경로').Append($nl)
+    foreach ($prop in $paths.PSObject.Properties) {
+      if (-not $prop.Value) { continue }
+      [void]$sb.Append('  ' + $prop.Name.PadRight(12) + ' ' + $prop.Value).Append($nl)
     }
-    if ($l -match '^\s*\|[\s:\-|]+\|\s*$') { continue }
-    if ($l -match ('^\s*\|\s*' + [regex]::Escape($type) + '\s*\|\s*' + [regex]::Escape($code) + '\s*\|')) { $hit = $l }
   }
-
-  if (-not $hit) {
-    return ($head + ($type + ' / ' + $code + ' 는 레지스트리에 없다. 즉석 등록을 제안한다 — 값을 추측해 채우지 않는다.') + $nl)
-  }
-  return ($head + $header + $nl + $sep + $nl + $hit + $nl)
+  if ($j.db) { [void]$sb.Append('db           있다. 값은 여기 안 싣는다 — 계정은 {루트}\config\ 에만 있다').Append($nl) }
+  [void]$sb.Append($nl)
+  [void]$sb.Append('소스는 위 경로에 있다. 다른 폴더를 소스로 짐작하지 않는다. `logs` 는 소스가 아니다.').Append($nl)
+  return $sb.ToString()
 }
 
 <#

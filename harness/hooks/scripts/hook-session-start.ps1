@@ -9,18 +9,21 @@
   내는 것
     1  이 세션의 시스템   — 런처가 확정한 것
     2  skills\vreins-rules\SKILL.md       항상 (전문)
-    3  {레지스트리}\systems.md            항상 (이 시스템 행만)
+    3  {루트}\systems\{유형}\{코드}.json   항상 (시스템명 · 기술기반 · 소스 경로)
     4  {위키}\glossary.md                 항상 (용어 색인만)
     5  {위키}\{유형}\{코드}\{코드}-OVERVIEW.md   항상 (related 줄만)
     6  always-on 규칙   — 시점을 가리지 않는 것만. 지금은 handling-unknowns 하나다
 
   3·4 와 기술기반은 **플러그인 안이 아니다.** 2026-09-22 회의로 시스템 정보를
   플러그인에서 내렸다 — 어디서 찾는지는 hook-common.ps1 의
-  Get-VreinsRegistryPath · Get-VreinsTechbaseRoot 하나씩이 정한다.
+  Get-VreinsSystemFiles · Get-VreinsTechbaseRoot 가 정한다.
+
+  3 은 한때 레지스트리(systems.md)의 「이 시스템 행」이었다. 그 파일은 끝내 어디에도
+  만들어지지 않았고, 행이 주던 것은 시스템 정의 JSON 에 다 있었다. 그래서 정의를 직접 낸다.
 
   내지 않는 것
-    registry 의 모듈 코드 조회표 · reference-*.md   명시 호출만
-    단계별 기술기반 4종                             단계가 정해진 뒤에 스킬이 부른다
+    {기술기반}-reference-*.md     명시 호출만
+    단계별 기술기반 4종            단계가 정해진 뒤에 스킬이 부른다
 
   실패해도 항상 exit 0. 훅이 세션을 막아서는 안 된다.
 
@@ -34,7 +37,6 @@ $harness  = Get-VreinsHarnessRoot
 $wiki     = Get-VreinsWikiRoot
 $system  = Get-VreinsSystem
 $techbase = Get-VreinsTechbaseRoot -SystemType $(if ($system) { $system.SystemType } else { $null })
-$registry = Get-VreinsRegistryPath
 
 Write-Output '===== vReins 하네스 ====='
 Write-Output ''
@@ -58,13 +60,12 @@ if ($system) {
 }
 
 <#
-  셋 다 **플러그인 밖**이라 어디로 잡혔는지 밝힌다.
-  2026-09-22 전에는 기술기반·레지스트리가 플러그인 안에 있어 밝힐 것이 없었다.
+  둘 다 **플러그인 밖**이라 어디로 잡혔는지 밝힌다.
+  2026-09-22 전에는 기술기반이 플러그인 안에 있어 밝힐 것이 없었다.
   이제는 사람마다 다른 자리에 있을 수 있고, 틀렸을 때 어디를 볼지 알아야 한다.
 #>
 if ($wiki)     { Write-Output ('wiki         ' + $wiki) }     else { Write-Output 'wiki         (못 찾음)' }
 if ($techbase) { Write-Output ('기술기반경로 ' + $techbase) } else { Write-Output '기술기반경로 (못 찾음)' }
-if ($registry) { Write-Output ('레지스트리   ' + $registry) } else { Write-Output '레지스트리   (못 찾음)' }
 Write-Output ''
 
 if (-not $system) {
@@ -93,8 +94,12 @@ if (-not $wiki) {
   Write-Output ''
 }
 if (-not $techbase) {
-  Write-Output '기술기반 폴더를 못 찾았다. 넷 중 한 곳에 있어야 한다 — vreins-rules 3절.'
-  Write-Output '  VREINS_TECHBASE_ROOT / {위키}\{유형}\COMMON\techbase\ / {위키}\techbase\ / {루트}\techbase\ / 플러그인\techbase\'
+  if ($system) {
+    Write-Output '기술기반 폴더를 못 찾았다. 셋 중 한 곳에 있어야 한다 — vreins-rules 3절.'
+    Write-Output '  VREINS_TECHBASE_ROOT / {위키}\{유형}\COMMON\_manual\ / {루트}\techbase\'
+  } else {
+    Write-Output '기술기반 폴더는 유형마다 따로 있다 — 시스템이 정해져야 자리가 정해진다.'
+  }
   Write-Output '**없으면 없는 것이다.** 다른 기술기반 지침을 가져다 쓰지 않고 그 자리에서 멈춘다.'
   Write-Output ''
 }
@@ -107,16 +112,16 @@ if (-not $techbase) {
   넷 중 하나가 레지스트리였다. 둘 다 **계속 자라는 문서**라 이대로 두면
   시스템과 용어가 늘수록 정작 지침이 뒤로 밀린다.
 
-    vreins-rules\SKILL.md   전문.    로딩 규칙 자체를 정하는 문서다. 줄일 수 없다
-    systems.md              한 행.   세션이 쓰는 것은 자기 시스템 행뿐이다
-    wiki\glossary.md        색인.    이름만. 정의는 그 단어가 나올 때 읽는다
+    vreins-rules\SKILL.md         전문.    로딩 규칙 자체를 정하는 문서다. 줄일 수 없다
+    systems\{유형}\{코드}.json    이 시스템 것 하나.  세션이 쓰는 것은 자기 정의뿐이다
+    wiki\glossary.md              색인.    이름만. 정의는 그 단어가 나올 때 읽는다
 #>
 $loaded = 0
 
 $block = Get-VreinsDocBlock -Path (Join-Path $harness 'skills\vreins-rules\SKILL.md') -Label 'skills\vreins-rules\SKILL.md'
 if ($block) { Write-Output $block; $loaded++ }
 
-$block = Get-VreinsRegistryRowBlock -System $system
+$block = Get-VreinsSystemDefinitionBlock -System $system
 if ($block) { Write-Output $block; $loaded++ }
 
 if ($wiki) {

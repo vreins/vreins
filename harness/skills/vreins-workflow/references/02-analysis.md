@@ -20,7 +20,7 @@
 type: srs
 id: SR2607-01292
 system: MESD
-techbase: [Acme_ERP_MES_V6]   # 위키 {유형}/COMMON/techbase/ 폴더명 그대로
+techbase: [Acme_ERP_MES_V6]   # 위키 {유형}/COMMON/_manual/{기술기반}-*.md 의 앞부분 그대로
 영향범위: [Acme_ERP_MES_V6]    # 5절 판정 결과. 이후 단계가 이것만 읽는다
 화면코드: [MESD610Q06]                # 2절이 확정한 화면. 「이 화면 앞서 누가 고쳤나」를 기계가 센다
 화면대역: "610"                       # 화면코드 5~7자리

@@ -14,7 +14,7 @@ argument-hint: [작업 제목. 비우면 진행 중인 세션을 찾는다]
 
 **변경예정파일은 여기서만 정해진다.** 머리말에 적는다.
 
-읽는 지침은 `guideline-TechStack.md` · `guideline-Architecture.md` 다
+읽는 지침은 `{기술기반}-TechStack.md` · `{기술기반}-Architecture.md` 다
 (4절 표). 영향범위에 든 기술기반만.
 
 ## 빈말을 쓰지 않는다

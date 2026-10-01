@@ -24,7 +24,7 @@
 type: srs
 id: SR2607-01292
 system: MESD
-techbase: [Acme_ERP_MES_V6] # 위키 {유형}/COMMON/techbase/ 폴더명 그대로
+techbase: [Acme_ERP_MES_V6] # 위키 {유형}/COMMON/_manual/{기술기반}-*.md 의 앞부분 그대로
 화면코드: [MESD610Q06]               # 고친 화면. 「이 화면 앞서 누가 고쳤나」를 기계가 센다
 화면대역: "610"                      # 화면코드 5~7자리
 description: 한 줄 요약               # 목차가 이걸 긁어 간다. 없으면 목차에서 고를 수 없다

@@ -108,7 +108,7 @@ techbase: [Acme_Level2_UI, Acme_Level2_TASK]
 
 ## 코드를 만지기 전에
 
-`wiki\{유형}\COMMON\techbase\{영향범위}-Linter.md` 를 **읽었는지 확인한다.**
+`wiki\{유형}\COMMON\_manual\{영향범위}-Linter.md` 를 **읽었는지 확인한다.**
 안 읽었으면 만지지 않는다. 4종 중 준수 강도가 「필수」인 것은 이것뿐이다.
 
 형상관리에 따라 준비가 다르다.

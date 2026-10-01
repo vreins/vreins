@@ -67,7 +67,38 @@ def meta(p):
     return kind, (g("강도") or "—"), g("description")
 
 
-def collect(sysdir, typ, wiki):
+GUIDE = re.compile(r"^(.+?)-(TechStack|Architecture|Boilerplate|Linter|reference-.+)\.md$")
+
+
+def techbase_of(ov):
+    """시스템 문서 머리말의 `techbase`. 없거나 비면 빈 목록.
+
+    인라인(`techbase: [A, B]`)과 블록(`techbase:` 아래 `  - A`) 둘 다 받는다 —
+    옵시디언 속성 편집기가 저장하면 블록으로 바뀐다. 실제로 SICB 가 그렇다."""
+    fm = re.match(r"^---\n(.*?)\n---", read(ov)[:2500], re.S)
+    if not fm:
+        return []
+    m = re.search(r"^techbase:[ \t]*(.*)$", fm.group(1), re.M)
+    if not m:
+        return []
+    v = m.group(1).strip()
+    if v.startswith("["):
+        return [x.strip().strip("'\"") for x in v.strip("[]").split(",") if x.strip()]
+    out = []
+    for ln in fm.group(1)[m.end():].split("\n")[1:]:   # [0] 은 `techbase:` 줄의 꼬리(빈 문자열)다
+        mm = re.match(r"^\s+-\s*(\S.*?)\s*$", ln)
+        if not mm:
+            break
+        out.append(mm.group(1).strip("'\""))
+    return out
+
+
+def collect(sysdir, typ, wiki, techbase):
+    """유형 공통 `_manual/` 과 시스템 `_manual/` 을 합친다.
+
+    공통 폴더의 **지침**(`{기술기반}-*.md`)은 이 시스템의 `techbase` 에 든 기술기반 것만 싣는다 —
+    한 유형에 기술기반이 여럿이고(APP 은 Django 와 Flutter), techbase 가 빈 시스템도 있다.
+    안 거르면 Java 시스템 목차에 Django Linter 가 「필수」로 찍힌다. 받은 문서는 거르지 않는다."""
     common = os.path.join(wiki, typ, "COMMON", "_manual")
     own = os.path.join(sysdir, "_manual")
     rows = []
@@ -75,7 +106,12 @@ def collect(sysdir, typ, wiki):
         if not os.path.isdir(base):
             continue
         for f in sorted(os.listdir(base)):
-            if "OVERVIEW" in f or not f.endswith(".md"):
+            # -INDEX 는 이 목차가 가리키는 **목록 파일**이지 읽을 문서가 아니다.
+            # 넣으면 「종류가 안 붙은 것」 단에 자기 자신이 뜬다.
+            if "OVERVIEW" in f or f.endswith("-INDEX.md") or not f.endswith(".md"):
+                continue
+            g = GUIDE.match(f)
+            if tag and g and g.group(1) not in techbase:
                 continue
             k, s, d = meta(os.path.join(base, f))
             rows.append((f[:-3], pref + f, k, s, d, tag))
@@ -148,7 +184,8 @@ def folder_block(base, smap):
     """`_manual/` 폴더 목록. 그 폴더에 있는 것 전부를 종류별로 묶는다."""
     rows = []
     for f in sorted(os.listdir(base)):
-        if "OVERVIEW" in f or not f.endswith(".md"):
+        # 자기 자신(-INDEX)은 뺀다. 목록이 목록을 가리키면 「종류가 없다」 단에 늘 한 줄이 남는다.
+        if "OVERVIEW" in f or f.endswith("-INDEX.md") or not f.endswith(".md"):
             continue
         k, st, d = meta(os.path.join(base, f))
         rows.append((f, k or "—", st, d))
@@ -221,7 +258,7 @@ def main(wiki, write):
             if not os.path.isfile(ov):
                 print("  %-22s 시스템 문서가 없다" % (typ + "/" + name))
                 continue
-            rows = collect(sysdir, typ, wiki)
+            rows = collect(sysdir, typ, wiki, techbase_of(ov))
             cap = 9 if len(rows) > 16 else 16
             new, what = apply(read(ov), block(rows, smap, cap))
             key = typ + "/" + name
