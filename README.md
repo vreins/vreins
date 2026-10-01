@@ -28,7 +28,7 @@
 
     Claude Code                  플러그인 마켓플레이스를 쓸 수 있어야 한다
     Windows PowerShell 5.1       훅이 전부 .ps1 이다. 현재 Windows 전용이다
-    Python 3                     선택. 위키 목차 생성기(build-index.py)를 쓸 때만
+    Python 3                     선택. 위키 보조 스크립트(build-docindex.py 등)를 쓸 때만
 
 문서와 프롬프트는 **한국어**로 쓰여 있다.
 

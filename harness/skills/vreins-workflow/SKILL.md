@@ -44,13 +44,13 @@ TS  Troubleshooting 한 장으로 끝낸다. 단계를 나누지 않는다
 references\readme.md              작업 폴더 표지. 세션을 열 때 먼저 만든다
 references\01-requirements.md  ~  06-deployment.md
 references\TS-troubleshooting.md
-references\overview.md            시스템 배경 7절. 단계 산출물이 아니다
+references\overview.md            시스템 배경 6절. 단계 산출물이 아니다
 ```
 
 ## 단계별 로딩
 
-`vreins-rules` 스킬의 표가 정본이다. `02-analysis-{제목}.md` 머리말의 `영향범위` 로
-좁힌 기술기반(`techbase\{이름}\`)에서 그 단계가 `O` 한 것만 읽는다.
+`vreins-rules` 스킬의 표가 정본이다. `02-analysis-{SR번호}.md` 머리말의 `영향범위` 로
+좁힌 기술기반(`{기술기반 루트}\{기술기반}-*.md`)에서 그 단계가 `O` 한 것만 읽는다.
 
 **`상태: 미작성` 인 파일은 읽지 않은 것으로 친다.** 없는 것과 같다.
 
@@ -108,7 +108,7 @@ techbase: [Acme_Level2_UI, Acme_Level2_TASK]
 
 ## 코드를 만지기 전에
 
-`techbase\{영향범위}\guideline-Linter.md` 를 **읽었는지 확인한다.**
+`wiki\{유형}\COMMON\techbase\{영향범위}-Linter.md` 를 **읽었는지 확인한다.**
 안 읽었으면 만지지 않는다. 4종 중 준수 강도가 「필수」인 것은 이것뿐이다.
 
 형상관리에 따라 준비가 다르다.

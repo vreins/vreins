@@ -11,7 +11,8 @@
     2  skills\vreins-rules\SKILL.md       항상 (전문)
     3  {레지스트리}\systems.md            항상 (이 시스템 행만)
     4  {위키}\glossary.md                 항상 (용어 색인만)
-    5  always-on 규칙   — 시점을 가리지 않는 것만. 지금은 handling-unknowns 하나다
+    5  {위키}\{유형}\{코드}\{코드}-OVERVIEW.md   항상 (related 줄만)
+    6  always-on 규칙   — 시점을 가리지 않는 것만. 지금은 handling-unknowns 하나다
 
   3·4 와 기술기반은 **플러그인 안이 아니다.** 2026-09-22 회의로 시스템 정보를
   플러그인에서 내렸다 — 어디서 찾는지는 hook-common.ps1 의
@@ -32,7 +33,7 @@ $ErrorActionPreference = 'Continue'
 $harness  = Get-VreinsHarnessRoot
 $wiki     = Get-VreinsWikiRoot
 $system  = Get-VreinsSystem
-$techbase = Get-VreinsTechbaseRoot
+$techbase = Get-VreinsTechbaseRoot -SystemType $(if ($system) { $system.SystemType } else { $null })
 $registry = Get-VreinsRegistryPath
 
 Write-Output '===== vReins 하네스 ====='
@@ -93,7 +94,7 @@ if (-not $wiki) {
 }
 if (-not $techbase) {
   Write-Output '기술기반 폴더를 못 찾았다. 넷 중 한 곳에 있어야 한다 — vreins-rules 3절.'
-  Write-Output '  VREINS_TECHBASE_ROOT / {위키}\techbase\ / {루트}\techbase\ / 플러그인\techbase\'
+  Write-Output '  VREINS_TECHBASE_ROOT / {위키}\{유형}\COMMON\techbase\ / {위키}\techbase\ / {루트}\techbase\ / 플러그인\techbase\'
   Write-Output '**없으면 없는 것이다.** 다른 기술기반 지침을 가져다 쓰지 않고 그 자리에서 멈춘다.'
   Write-Output ''
 }
@@ -127,6 +128,10 @@ if ($wiki) {
     # 조용히 비우지 않는다. 안전한 쪽(전문)으로 되돌린다.
     $block = Get-VreinsDocBlock -Path (Join-Path $wiki 'glossary.md') -Label 'wiki\glossary.md'
   }
+  if ($block) { Write-Output $block; $loaded++ }
+
+  # 이 시스템의 related. 본문 없이 관계 줄만 — 세션 시작에 안 들어오면 아무도 안 본다.
+  $block = Get-VreinsRelatedBlock -Wiki $wiki -System $system
   if ($block) { Write-Output $block; $loaded++ }
 }
 

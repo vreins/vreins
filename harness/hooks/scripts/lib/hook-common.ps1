@@ -111,8 +111,9 @@ function Get-VreinsWikiRoot {
   우리 조직이 아닌 사람이 받아 써도 되는 범용 뼈대만 담고, 「무엇을 지킬 것인가」는
   각자의 위키가 갖는다. 그래서 여기를 **찾는** 것이지 **아는** 것이 아니다.
 
-    VREINS_TECHBASE_ROOT     런처·시험용. 있으면 무조건 이긴다
-    {위키}\techbase\         정본. 이관이 끝나면 여기만 남는다
+    VREINS_TECHBASE_ROOT              런처·시험용. 있으면 무조건 이긴다
+    {위키}\{유형}\COMMON\techbase\   정본. 파일이 {기술기반}-{이름}.md 로 납작하게 있다
+    {위키}\techbase\                  위키 이관 전 자리
     {루트}\techbase\         위키를 따로 두지 않는 사람
     플러그인\techbase\        이관 전 옛 자리. 곧 없어진다
 
@@ -120,9 +121,15 @@ function Get-VreinsWikiRoot {
   그대로 보여야 한다(handling-unknowns).
 #>
 function Get-VreinsTechbaseRoot {
+  param([string] $SystemType)
   if ($env:VREINS_TECHBASE_ROOT -and (Test-Path $env:VREINS_TECHBASE_ROOT)) { return $env:VREINS_TECHBASE_ROOT }
   $wiki = Get-VreinsWikiRoot
   if ($wiki) {
+    # 유형마다 따로 있다 — 시스템을 모르면 이 자리는 정할 수 없다
+    if ($SystemType) {
+      $t = Join-Path (Join-Path (Join-Path $wiki $SystemType) 'COMMON') 'techbase'
+      if (Test-Path $t) { return $t }
+    }
     $t = Join-Path $wiki 'techbase'
     if (Test-Path $t) { return $t }
   }
@@ -458,3 +465,72 @@ function Get-VreinsRuleState {
   }
   return [pscustomobject]@{ Ready = $ready; NotReady = $notReady }
 }
+
+<#
+  그 시스템 문서({시스템코드}-OVERVIEW.md)의 `related:` 만 뽑는다. 본문은 안 싣는다.
+
+  **관계는 세션 시작에 들어와야 한다.** 파일을 열어야 보이면 이미 늦다 —
+  MES 화면을 고치면서 LEVEL2 전문이 밀리는 건이 실측 77%였는데,
+  그때 LEVEL2 쪽 overview 를 열어 볼 이유가 그 사람에게는 없다.
+
+  형식은 문자열 한 줄이다 — `상대 | 태그들 | 무엇으로·왜 | 확인`.
+  맵이 아니라 문자열인 이유는 **옵시디언 속성 편집기가 맵을 못 고치기 때문**이다.
+  고치다 깨지는 형식은 안 고쳐진다.
+#>
+function Get-VreinsRelatedBlock {
+  param(
+    [Parameter(Mandatory = $true)][string] $Wiki,
+    $System
+  )
+
+  $type = if ($System) { $System.SystemType } else { $null }
+  $code = if ($System) { $System.SystemCode } else { $null }
+  if (-not $type -or -not $code) { return $null }
+
+  $path = Join-Path (Join-Path (Join-Path $Wiki $type) $code) ($code + '-OVERVIEW.md')
+  if (-not (Test-Path $path)) { return $null }
+
+  $lines = (Get-Content $path -Raw -Encoding utf8) -split "`r?`n"
+  $nl = [Environment]::NewLine
+
+  # frontmatter 안에서만 본다. 본문에 같은 낱말이 나와도 안 걸리게.
+  $end = -1
+  for ($i = 1; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^---\s*$') { $end = $i; break } }
+  if ($end -lt 0) { return $null }
+
+  # 인라인(`related: ["[[A]]", "[[B]]"]`)과 블록 둘 다 받는다.
+  # 값이 통째로 [[..]] 라야 옵시디언이 링크로 잡으므로 형태가 인라인으로 굳었다.
+  $raw = ''
+  for ($i = 1; $i -lt $end; $i++) {
+    if ($lines[$i] -match '^related:\s*(.*)$') {
+      $raw = $Matches[1]
+      for ($k = $i + 1; $k -lt $end; $k++) {
+        if ($lines[$k] -match '^\s') { $raw += ' ' + $lines[$k] } else { break }
+      }
+      break
+    }
+  }
+  if (-not $raw) { return $null }
+
+  $names = @()
+  foreach ($m in [regex]::Matches($raw, '\[\[([^\]]+)\]\]')) {
+    $v = $m.Groups[1].Value.Trim()
+    # [[MESD-OVERVIEW|MESD]] 형태면 별칭(뒤)만 쓴다. 사람이 읽는 것은 시스템코드다.
+    if ($v -match '\|') { $v = ($v -split '\|')[-1].Trim() }
+    if ($v -and ($names -notcontains $v)) { $names += $v }
+  }
+  if ($names.Count -eq 0) { return $null }
+
+  $sb = New-Object System.Text.StringBuilder
+  [void]$sb.Append('===== wiki\' + $type + '\' + $code + '\' + $code + '-OVERVIEW.md — related (' + $names.Count + '건) =====').Append($nl)
+  [void]$sb.Append('  ' + ($names -join ' · ')).Append($nl)
+  [void]$sb.Append($nl)
+  [void]$sb.Append('이 시스템과 엮인 시스템들이다. **어떻게 엮였는지는 여기 없다** — 그 시스템 문서 2절').Append($nl)
+  [void]$sb.Append('「다른 시스템과」 표에 축·방향·접근(조회만/쓰기)과 근거가 있다.').Append($nl)
+  [void]$sb.Append('위 이름이 걸리는 작업이면 **고치기 전에 그 표를 읽는다.** 특히 접근이 `쓰기` 면 내가 상대를 깨뜨릴 수 있다.').Append($nl)
+  [void]$sb.Append('**02 분석과 TS 에서는 그쪽 이력도 본다** — 축이 `층구분` 이나 `공정흐름` 인 시스템만. 화면코드 체계가 달라 이름으로는 안 만난다.').Append($nl)
+  [void]$sb.Append('관계를 새로 알게 되면 이 파일 머리말 related 에 이름을 더하고 2절 표에 줄을 더한다 — 둘의 목록은 같아야 한다.').Append($nl)
+  [void]$sb.Append('쓸 수 있는 말은 wiki\관계.md 에 있다.').Append($nl)
+  return $sb.ToString()
+}
+
