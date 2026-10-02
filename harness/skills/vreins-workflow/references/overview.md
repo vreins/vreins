@@ -34,10 +34,13 @@
 ---
 type: overview
 system: ABCD
+aliases:
+  - ABCD
 lifecycle: production
 description: A공정 B라인 LEVEL2 — L1(PLC)↔L2↔L3(MES) 송수신·트래킹·번들 실적
 owner: A공정B라인담당
 techbase: [Acme_Level2_UI, Acme_Level2_TASK]
+대역축: 화면코드 5~7자리
 related: ["[[MESD]]", "[[ABCG]]", "[[LINK]]", "[[ABCI]]"]
 updated: 2026-09-22
 ---
@@ -45,6 +48,8 @@ updated: 2026-09-22
 
 | 칸 | 값 | 왜 있나 |
 |---|---|---|
+| `aliases` | `- ABCD` | **빼면 린터가 잡는다** (`lint.py` 의 필수 칸). 옵시디언이 `[[ABCD]]` 로 쓴 링크를 이 파일로 잇는 자리이기도 하다 — 파일명은 `ABCD-OVERVIEW.md` 라 이것이 없으면 링크가 끊긴다 |
+| `대역축` | `화면코드 5~7자리` | 그 시스템에서 **화면대역을 어디서 끊는지**. 시스템마다 다르므로 단계 산출물의 `화면대역` 을 채우려면 여기를 본다. 기계는 안 읽는다 — 사람이 보는 칸이다 |
 | `lifecycle` | `skeleton` · `production` · `deprecated` | 옛 `status` 자리다. `status` 는 47개 파일이 전부 같은 값이라 정보가 0이었다 — 「작성완료/부분작성」은 절마다 다른데 파일 하나에 값 하나를 붙이면 언제나 거짓말이 된다 |
 | `description` | 한 줄 | 이 시스템을 한 줄로 고를 근거다. 없으면 목록에서 고를 수 없다 |
 | `owner` | 역할명 한 덩어리 — `A공정담당` | **사람 이름을 안 적는다.** 사람은 바뀌고 역할은 안 바뀐다. 누가 그 역할인지는 위키 밖(조직도)이 안다 |

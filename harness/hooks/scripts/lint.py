@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""위키를 검사한다.  python hooks/scripts/lint.py [wiki경로]
+r"""위키를 검사한다.  python hooks/scripts/lint.py [wiki경로]
 
 **막지 못하면서 초록불을 켜는 검사가 제일 해롭다.** 그래서 여기 있는 것은
 전부 「형태」만 본다 — 내용이 맞는지는 판정하지 않는다. 의도를 보려 들면 무너진다.
