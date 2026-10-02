@@ -24,3 +24,7 @@ harness/skills/vreins-system/references/systems.md
 # 윈도우가 만드는 것
 desktop.ini
 Thumbs.db
+
+# 파이썬이 만드는 바이트코드. 배포되면 .py 와 어긋난 사본이 따라간다
+__pycache__/
+*.pyc
