@@ -6,7 +6,7 @@
 
 `wiki\{시스템유형}\{시스템코드}\{시스템코드}-OVERVIEW.md` 를 이 목차대로 쓴다. **절 구성의 정본은 이 파일 하나다.**
 파일 이름에 시스템코드가 붙는 이유 — 전부 `overview.md` 였을 때 열둘이 같은 이름이라
-옵시디언에서 `[[SPRG]]` 가 해결되지 않았고 그래프에 선이 안 그어졌다.
+옵시디언에서 `[[MESD]]` 가 해결되지 않았고 그래프에 선이 안 그어졌다.
 
 한때 위키 `readme.md` 에도 절 목록이 있었다. 그쪽이 5절로 굳는 동안 실물은 7절로 자랐고,
 훅 주입문과 스킬 여섯이 전부 절 번호로 지시를 내리는데 모든 `overview.md` 가 틀린 목록을
@@ -41,7 +41,7 @@ description: A공정 B라인 LEVEL2 — L1(PLC)↔L2↔L3(MES) 송수신·트래
 owner: A공정B라인담당
 techbase: [Acme_Level2_UI, Acme_Level2_TASK]
 대역축: 화면코드 5~7자리
-related: ["[[MESD]]", "[[ABCG]]", "[[LINK]]", "[[ABCI]]"]
+related: ["[[MESD]]", "[[ABCG]]", "[[ABCL]]", "[[ABCI]]"]
 updated: 2026-09-22
 ---
 ```

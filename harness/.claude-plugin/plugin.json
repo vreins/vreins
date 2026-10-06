@@ -1,7 +1,7 @@
 {
   "name": "vreins-harness",
   "displayName": "vReins 하네스",
-  "version": "4.4.4",
+  "version": "4.4.5",
   "description": "작업 요청(SR·SM 등)의 절차·양식·행동 규칙. 산출물을 wiki 에 양식대로 쌓는다.",
   "author": { "name": "vReins" },
   "keywords": ["vreins", "harness", "mes", "level2", "sr", "workflow"],

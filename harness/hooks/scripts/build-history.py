@@ -23,7 +23,6 @@ try:
 except Exception:
     pass
 
-TYPES = ["MES", "LEVEL2", "WEB", "APP"]
 MAX = 100
 
 OPEN_RE = re.compile(r"<!--\s*auto:이력[^\n]*?-->")
@@ -249,9 +248,16 @@ def run(root, write):
     total = 0
     touched = 0
     skipped = []
-    for typ in TYPES:
+    # 유형을 목록으로 박지 않는다. 위키 밑의 폴더가 곧 유형이다.
+    #
+    # 한때 유형 넷을 목록으로 박아 두었다. 그 넷은 **쓰던 곳의 넷**이라
+    # 이 플러그인을 받아 쓰는 다른 곳에는 맞지 않고, 같은 곳 안에서도 유형을
+    # 새로 만들면 조용히 빠진다 — 오류가 아니라 「이력이 안 붙네」로만 보인다.
+    #
+    # 거르는 기준은 아래 시스템 층과 같다. _로 시작하는 것, .git, COMMON.
+    for typ in sorted(os.listdir(root)):
         tdir = os.path.join(root, typ)
-        if not os.path.isdir(tdir):
+        if typ.startswith("_") or typ in (".git", "COMMON") or not os.path.isdir(tdir):
             continue
         for name in sorted(os.listdir(tdir)):
             sysdir = os.path.join(tdir, name)

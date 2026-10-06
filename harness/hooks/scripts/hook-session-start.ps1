@@ -152,7 +152,8 @@ if ($wiki) {
       Write-Output ('없는 파일   wiki\' + $system.SystemType + '\' + $system.SystemCode +
                     '\' + $system.SystemCode + '-OVERVIEW.md')
       Write-Output '산출물이 갈 자리가 없다는 뜻이다. 작업을 시작하기 전에 만든다.'
-      Write-Output 'wiki\_sample\ 의 것을 베껴 이 시스템의 내용으로 고쳐 쓴다.'
+      Write-Output 'wiki\_sample\ 밑의 시스템 예시({코드}-OVERVIEW.md, 절 다섯)를 베껴 고쳐 쓴다.'
+      Write-Output '_sample\SAMPLE-OVERVIEW.md 는 폴더 규약 설명이라 양식이 아니다 — 그것을 베끼지 않는다.'
       Write-Output '빈 껍데기를 두지 않는다 — 절을 비워 두면 다음 사람이 누락과 구분하지 못한다.'
       $loaded++
     }
