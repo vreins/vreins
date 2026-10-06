@@ -138,6 +138,25 @@ if ($wiki) {
   # 이 시스템의 related. 본문 없이 관계 줄만 — 세션 시작에 안 들어오면 아무도 안 본다.
   $block = Get-VreinsRelatedBlock -Wiki $wiki -System $system
   if ($block) { Write-Output $block; $loaded++ }
+
+  # 위키에 자리가 아예 없는 경우. **조용히 넘어가면 아무도 안 만든다.**
+  #
+  # 실행기는 프로젝트를 등록해도 위키에 폴더를 만들지 않고(그쪽은 공유 저장소다),
+  # lint.py 가 이것을 오류로 잡기는 하는데 부르는 훅이 없다. 그래서 등록한 사람은
+  # 「등록했는데 위키에 아무것도 안 생겼다」만 보고, 왜인지는 아무 데서도 안 나온다.
+  if ($system -and $system.SystemType -and $system.SystemCode) {
+    $ovw = Join-Path (Join-Path (Join-Path $wiki $system.SystemType) $system.SystemCode) `
+                     ($system.SystemCode + '-OVERVIEW.md')
+    if (-not (Test-Path $ovw)) {
+      Write-Output ('===== 위키에 이 시스템의 자리가 없다 =====')
+      Write-Output ('없는 파일   wiki\' + $system.SystemType + '\' + $system.SystemCode +
+                    '\' + $system.SystemCode + '-OVERVIEW.md')
+      Write-Output '산출물이 갈 자리가 없다는 뜻이다. 작업을 시작하기 전에 만든다.'
+      Write-Output 'wiki\_sample\ 의 것을 베껴 이 시스템의 내용으로 고쳐 쓴다.'
+      Write-Output '빈 껍데기를 두지 않는다 — 절을 비워 두면 다음 사람이 누락과 구분하지 못한다.'
+      $loaded++
+    }
+  }
 }
 
 # --- 3. always-on 규칙 --------------------------------------------------------
