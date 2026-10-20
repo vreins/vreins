@@ -263,12 +263,19 @@ def definitions(wiki):
                     % (len(missing), " · ".join("%s/%s" % x for x in missing)))
 
 
-def main(wiki):
+def main(wiki, only=None):
+    """only 를 주면 그 아래만 본다.
+
+    단계마다 검사를 돌리는데 위키 전체가 258개다(실측 1.8초). 내 세션 폴더만
+    보면 될 일을 매번 전부 훑으면 그 시간이 단계 수만큼 쌓인다.
+    **시스템 정의 대조는 only 일 때 건너뛴다** — 그건 위키 전체를 봐야 하는 검사다.
+    """
     want = template_sections()
-    definitions(wiki)
+    if not only:
+        definitions(wiki)
     vc = vocab(wiki)
     n = 0
-    for root, d, fs in os.walk(wiki):
+    for root, d, fs in os.walk(only if only else wiki):
         if ".git" in root:
             continue
         for f in fs:
@@ -308,4 +315,11 @@ def wiki_from_env():
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else wiki_from_env()))
+    # lint.py {위키} [--only {폴더}]   폴더를 주면 그 아래만 본다
+    args = [a for a in sys.argv[1:] if a != "--only"]
+    onlydir = None
+    if "--only" in sys.argv:
+        k = sys.argv.index("--only")
+        onlydir = sys.argv[k + 1] if len(sys.argv) > k + 1 else None
+        args = [a for a in args if a != onlydir]
+    sys.exit(main(args[0] if args else wiki_from_env(), onlydir))
