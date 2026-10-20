@@ -19,7 +19,9 @@ except Exception:
     pass
 
 HARNESS = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-TABLE = os.path.join(HARNESS, "skills", "vreins-rules", "SKILL.md")
+# 단계별 로딩 표. 2026-10-20 에 SKILL.md 에서 references\ 로 내렸다 —
+# 스킬 본문은 세션마다 통째로 올라가는데 이 표는 그 단계에서만 쓴다.
+TABLE = os.path.join(HARNESS, "skills", "vreins-rules", "references", "단계별-로딩.md")
 OPEN, CLOSE = "<!-- auto:읽을문서", "<!-- /auto -->"
 FOPEN = "<!-- auto:폴더목록"
 ORD = {"필수": 0, "권장": 1, "참조": 2}
