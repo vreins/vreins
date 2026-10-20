@@ -37,14 +37,28 @@ description: 세션마다 항상 읽는다. 무엇을 언제 읽고 언제 멈�
 
 `commands\` — **사람이 친다.** 하네스에 들어오는 문 여덟이다.
 
-    /vreins-requirements    01  무엇을 해달라는 것인가
-    /vreins-analysis        02  우리 코드에서 무슨 뜻인가 · 영향범위를 정한다
-    /vreins-design          03  무엇을 어떻게 바꿀 것인가
-    /vreins-development     04  고친다
-    /vreins-testing         05  확인한다
-    /vreins-deployment      06  올린다 · 체인지셋을 남긴다
-    /vreins-troubleshoot    TS  장애. 한 장으로 끝낸다
-    /vreins-review              체크인·PR 전에 훑는다 · 지적을 처리한다
+    vreins-requirements    01  무엇을 해달라는 것인가
+    vreins-analysis        02  우리 코드에서 무슨 뜻인가 · 영향범위를 정한다
+    vreins-design          03  무엇을 어떻게 바꿀 것인가
+    vreins-development     04  고친다
+    vreins-testing         05  확인한다
+    vreins-deployment      06  올린다 · 체인지셋을 남긴다
+    vreins-troubleshoot    TS  장애. 한 장으로 끝낸다
+    vreins-review              체크인·PR 전에 훑는다 · 지적을 처리한다
+
+**이름 앞에 플러그인 이름이 붙는다.** Claude Code 가 `commands\` 를 스킬로 올리고
+플러그인 스킬에 `{플러그인}:{이름}` 네임스페이스를 주기 때문이다.
+
+    /vreins-harness:vreins-requirements {요청 원문}
+
+`/vreins-requirements` 로는 **안 불린다** — 「Unknown command」가 돌아온다.
+`/` 만 치면 자동완성이 정확한 이름을 보여 준다.
+
+**굳이 커맨드를 안 써도 된다.** 세션 시작 훅이 이 문서를 전문으로 올리고
+`start-at-requirements` 가 매 프롬프트마다 들어가므로, 작업 요청을 그냥 말해도
+01 부터 들어간다. 커맨드는 문일 뿐이고 절차·양식은 스킬이 정한다.
+간이 차선 전용 커맨드는 두지 않는다 — 차선은 01 끝에 판정하는 것이지
+사람이 들어올 때 고르는 것이 아니다.
 
 `skills\` — **AI 가 부른다.** 세션 시작에 올라가지 않고 **그 상황이 되면** 부른다.
 
@@ -234,6 +248,7 @@ reference       부를 때                    그 상황이 걸릴 때만
 | 01 Requirements | 공정지식 · 솔루션 | |
 | 02 Analysis | Architecture · 명세 | **O** 같은 화면 + **related 의 층구분·공정흐름** |
 | 03 Design | Architecture · TechStack | **O** 과거 `03-design` |
+| 23 Analysis·Design | 위 둘의 합집합 | **O** 위 둘의 합집합 |
 | 04 Development | **Linter** · Architecture · Boilerplate · TechStack · 개발 · 명세 | |
 | 05 Testing | **Linter** · TechStack · 양식 · 테스트 | **O** 과거 `05-testing` 회귀 목록 |
 | 06 Deployment | Architecture · TechStack · 배포 | **O** 과거 `06-deployment` |
@@ -258,7 +273,8 @@ reference       부를 때                    그 상황이 걸릴 때만
 ## 5. 영향범위
 
 기술기반이 복수인 시스템에서 한쪽만 건드리는 작업이 많다.
-**분석 단계가 판정해** `02-analysis-{제목}.md` 머리말에 적고, 이후 단계는 그것만 읽는다.
+**분석 단계가 판정해** 그 문서 머리말에 적고, 이후 단계는 그것만 읽는다 —
+정식이면 `02-analysis-{제목}.md`, 간이 차선이면 `23-analysis-design-{제목}.md`.
 
 ```yaml
 techbase: [Acme_Level2_UI, Acme_Level2_TASK]
@@ -275,10 +291,11 @@ techbase: [Acme_Level2_UI, Acme_Level2_TASK]
 
 설계·개발 중 영향범위 **밖의 파일**이 나오면 그 자리에서 멈춘다.
 
-    경고 → 사용자 확인 → 영향범위 확대 → 02-analysis 머리말 갱신
+    경고 → 사용자 확인 → 영향범위 확대 → 분석 문서 머리말 갱신
          → 확대된 기술기반 지침을 그 자리에서 추가 로딩 → 계속
 
-확대 이력은 `03-design-{제목}.md` 에 한 줄 남긴다. 조용히 넓히지 않는다.
+확대 이력은 설계 문서에 한 줄 남긴다. 조용히 넓히지 않는다.
+**간이 차선이었으면 확대가 곧 차선 이탈이다** — 정식으로 돌린다.
 
     영향범위 확대: Level2_UI → Level2_UI, Level2_TASK (조회 쿼리 신규 필요)
 
