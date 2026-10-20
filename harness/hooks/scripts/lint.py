@@ -19,6 +19,20 @@ TEMPLATE = os.path.join(HARNESS, "skills", "vreins-workflow", "references", "ove
 VOCAB_DIR = None          # 위키 안 관계.md. 아래에서 채운다
 LIMIT_SEC = 4000       # 한 절. 한 번에 읽는 단위가 절이라 여기에 건다
 LIMIT_FILE = 15000     # 파일 전체. 경고만 — 넘었다고 틀린 건 아니다
+# 단계 산출물의 줄 수 한도. 정본은 references\_간결.md 의 표다 — 거기를 고치면 여기도 고친다.
+# **머리말은 안 센다.** 기계가 읽는 자리라 사람이 줄일 수 있는 것이 아니다.
+LIMIT_STAGE = {
+    "readme": 25,
+    "01-requirements": 45,
+    "02-analysis": 50,
+    "03-design": 50,
+    "23-analysis-design": 70,
+    "04-development": 45,
+    "05-testing": 50,
+    "06-deployment": 30,
+    "01-troubleshooting": 70,
+}
+
 LIFECYCLE = ("skeleton", "production", "deprecated")
 REQUIRED = ("type", "system", "aliases", "lifecycle", "description", "owner", "techbase", "updated")
 
@@ -184,6 +198,30 @@ def check_overview(p, rel, want, vc):
                     % (rel, format(len(t), ",")))
 
 
+FRONT_RE = "^---" + chr(92) + "r?" + chr(92) + "n.*?" + chr(92) + "r?" + chr(92) + "n---" + chr(92) + "r?" + chr(92) + "n"
+NL = chr(10)
+def check_stage(p, rel):
+    """단계 산출물이 한도 안인가. **머리말을 뺀 본문 줄 수**를 센다.
+
+    왜 세는가 — 「짧게 쓴다」를 권고로 두었더니 안 지켜졌다. 실측에서 문서 다섯이
+    522줄이었고 그중 상당수가 앞 문서를 다시 설명하는 산문이었다.
+    한도는 references\\_간결.md 가 정하고 여기는 집행만 한다.
+
+    **경고로 낸다.** 길다고 틀린 것은 아니다 — 사람이 사유를 적고 넘길 수 있어야 한다.
+    오류로 내면 급한 사람이 검사를 통째로 끄게 된다.
+    """
+    name = os.path.basename(p)
+    for key, limit in LIMIT_STAGE.items():
+        if not name.startswith(key + "-") and name != key + ".md":
+            continue
+        t = read(p)
+        body = re.sub(FRONT_RE, "", t, flags=re.S)
+        n = len([x for x in body.split(NL) if x.strip()])
+        if n > limit:
+            warn.append("%s : 본문 %d줄로 한도 %d줄을 넘었다 — _간결.md 의 덜어내는 순서대로 줄인다"
+                        % (rel, n, limit))
+        return
+
 def definitions(wiki):
     """이 PC 의 시스템 정의({루트}\\systems\\{유형}\\{코드}.json)와 위키 시스템을 대조한다.
 
@@ -243,6 +281,7 @@ def main(wiki):
                 err.append("%s : BOM 이 붙었다 — UTF-8 BOM 없이 저장한다" % rel)
             if b"\r\n" in raw:
                 err.append("%s : CRLF 가 섞였다 — LF 로 저장한다" % rel)
+            check_stage(p, rel)
             if f == os.path.basename(root) + "-OVERVIEW.md":
                 # 파일 이름이 {시스템코드}-OVERVIEW.md 다. 그냥 overview.md 였을 때는 12개가 전부 같은 이름이라
                 # 옵시디언에서 [[MESD]] 가 해결되지 않아 그래프에 선이 안 그어졌다.
