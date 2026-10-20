@@ -323,3 +323,16 @@ techbase: [Acme_Level2_UI, Acme_Level2_TASK]
 
 검사는 `hooks\scripts\lint.py {wiki}` 다. **형태만 본다** — 머리말 · 절 구성 · `related` 와 2절 표의
 일치 · 시스템 정의와 위키 시스템의 일치. 내용이 맞는지는 판정하지 않는다.
+
+### 제출용 엑셀도 파생값이다
+
+    단위테스트결과서_{SR번호}_v1.0.xlsx   export-testing-xlsx.py   05-testing-{SR번호}.md
+
+05 단계를 끝낼 때 찍는다. **엑셀을 고치지 않는다** — 다음에 찍으면 덮인다.
+고칠 것은 `05-testing-{SR번호}.md` 에서 고치고 다시 찍는다.
+
+    python hooks\scripts\export-testing-xlsx.py {05-testing-*.md}
+
+외부 패키지를 쓰지 않는다. xlsx 는 zip 안의 XML 이고 표준 라이브러리로 쓴다 —
+`pip install` 을 요구하면 사내망에서 막히는 날 「엑셀만 안 나오는」 고장이 되고,
+그 사람은 제 문서를 의심한다.
