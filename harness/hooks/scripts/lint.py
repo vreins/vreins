@@ -31,6 +31,7 @@ LIMIT_STAGE = {
     "05-testing": 50,
     "06-deployment": 30,
     "01-troubleshooting": 70,
+    "01-single": 25,
 }
 
 LIFECYCLE = ("skeleton", "production", "deprecated")
