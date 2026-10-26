@@ -34,6 +34,11 @@ LIMIT_STAGE = {
     "01-single": 25,
 }
 
+# 개조식이 아닌 끝맺음. 산출물은 ~함 · ~음 · 명사형으로 끝낸다(references\_간결.md).
+# 사유 한 줄은 서술이 맞으므로 **경고로만** 낸다 — 오류로 막으면 사유를 안 쓰게 된다.
+SEOSUL = ("하였습니다", "했습니다", "됩니다", "입니다", "습니다",
+          "것입니다", "하였음을", "되었음을", "하겠습니다")
+
 LIFECYCLE = ("skeleton", "production", "deprecated")
 REQUIRED = ("type", "system", "aliases", "lifecycle", "description", "owner", "techbase", "updated")
 
@@ -219,8 +224,25 @@ def check_stage(p, rel):
         body = re.sub(FRONT_RE, "", t, flags=re.S)
         n = len([x for x in body.split(NL) if x.strip()])
         if n > limit:
-            warn.append("%s : 본문 %d줄로 한도 %d줄을 넘었다 — _간결.md 의 덜어내는 순서대로 줄인다"
+            warn.append("%s : 본문 %d줄로 한도 %d줄을 넘었다 — 다시 쓰지 말고 사유를 한 줄 적는다"
                         % (rel, n, limit))
+
+        # 개조식 끝맺음. 코드블록 안은 세지 않는다 — 거기 든 것은 출력이지 글이 아니다.
+        hits, incode = 0, False
+        for line in body.split(NL):
+            x = line.strip()
+            if x.startswith("```"):
+                incode = not incode
+                continue
+            if incode or not x:
+                continue
+            if any(w in x for w in SEOSUL):
+                hits += 1
+        # 셋까지는 봐준다. 「왜 그렇게 정했나」는 서술이 맞는 자리라 0 을 요구하면
+        # 사유를 안 쓰게 된다 — 줄이려던 것보다 큰 것을 잃는다.
+        if hits > 3:
+            warn.append("%s : 서술체 끝맺음 %d군데 — 산출물은 두괄식 개조식이다(~함 · ~음)"
+                        % (rel, hits))
         return
 
 def definitions(wiki):
