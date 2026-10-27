@@ -51,13 +51,18 @@
     Stop 의 type: "prompt" 훅이 ok:false 를 내게 하고 돌렸다
       → reason 이 모델에게 돌아갔고, 모델이 이어서 일했다
 
-## 셋으로 나눈 이유
+## 넷으로 나눈 이유
 
 | 파일 | 언제 도나 | 무엇을 내나 |
 |---|---|---|
 | `hook-session-start.ps1` | 세션 시작에 한 번 | 시스템 확인 + 항상 읽는 지침 + always-on 규칙 |
 | `hook-inject-rule.ps1` | 편집 직전 · 커밋 직전 | 그 순간의 규칙을 **JSON 으로** |
-| `hook-common.ps1` | (실행 안 됨) | 위 둘이 dot-source 하는 경로 해석 |
+| `hook-wiki-push.ps1` | 세션 시작 · 답 끝내기 직전 | 안 올라간 산출물을 센다. 세션당 한 번 막는다 |
+| `hook-common.ps1` | (실행 안 됨) | 위 셋이 dot-source 하는 경로 해석 |
+
+`hook-wiki-push.ps1` 만 **막는** 훅이다. 나머지는 글을 낸다.
+막는 이유는 푸시가 **실패해도 조용한** 유일한 단계이기 때문이다 — 커밋은 실패하면
+그 자리에서 보이지만, 푸시는 사내망 밖에서 그냥 안 되고 아무도 모른다.
 
 `hook-inject-rule.ps1` 은 기본값으로 전문을 stdout 에 낸다. **`PreToolUse` 에 걸 때는
 반드시 `-AsAdditionalContext` 나 `-AsPermissionAsk` 중 하나를 준다** — 안 주면
